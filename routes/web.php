@@ -145,7 +145,7 @@ Route::group(['middleware' => ['auth', 'auth.master.staff'] ], function () {
 
 	Route::post('support-delete', 'Support\SupportController@destroy')->name('support.delete');
 
-	Route::get('/action-queue', 'ActionQueueController@index')->name('action.queue');
+	Route::get('/action-queue', 'ActionQueueController@index')->name('action.queue.get');
 
 	Route::post('/action-queue', 'ActionQueueController@index')->name('action.queue');
 

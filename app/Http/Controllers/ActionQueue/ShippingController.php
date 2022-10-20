@@ -4,11 +4,9 @@ namespace App\Http\Controllers\ActionQueue;
 
 use DataTables;
 use Carbon\Carbon;
-use App\Helpers\Log;
 use App\Model\Subscription;
 use Illuminate\Http\Request;
 use App\Events\ShippingNumber;
-use App\Model\SubscriptionLog;
 use App\Http\Controllers\Controller;
 use App\Model\CustomerStandaloneSim;
 use App\Model\CustomerStandaloneDevice;
@@ -30,99 +28,49 @@ class ShippingController extends Controller
 	 */
 	public function markShipped(Request $request)
     {
-		try {
-			$data = $request->validate( [
-				'subscription_id'               => 'sometimes|required',
-				'customer_standalone_sim_id'    => 'sometimes|required',
-				'customer_standalone_device_id' => 'sometimes|required'
-			] );
+    	$data = $request->validate([
+            'subscription_id'				 => 'sometimes|required',
+            'customer_standalone_sim_id' 	 => 'sometimes|required',
+            'customer_standalone_device_id'  => 'sometimes|required'
+        ]);
 
-			$imeiValue = $request->has( 'device_imei' ) ? $request->device_imei : $request->imei;
+        if (array_key_exists("subscription_id",$data))
+		{
+            $subscription = Subscription::whereId($data['subscription_id'])->with('device', 'sim', 'customer')->first();
+            $imeiValue = $request->has('device_imei') ? $request->device_imei : $request->imei;
+			$subscription->update([
+                'status'        => 'for-activation',
+                'tracking_num'  => $request->tracking_num,
+                'sim_card_num'  => $request->sim_card_num,
+                'device_imei'   => $imeiValue,
+                'shipping_date' => Carbon::today()
+            ]);
+            event(new SubcriptionStatusChanged($data['subscription_id']));
+            event(new ShippingNumber($request->tracking_num, $subscription));
+        	return $data;
+		}
+		else if(array_key_exists("customer_standalone_device_id",$data))
+		{
+            $customerStandaloneDevice = CustomerStandaloneDevice::whereId($data['customer_standalone_device_id'])->with('device', 'customer')->first();
+			$customerStandaloneDevice->update([
+                'status'        => 'complete' ,
+                'tracking_num'  => $request->tracking_num,
+                'imei'          => $request->imei,
+                'shipping_date' => Carbon::today()
+            ]);
+            event(new ShippingNumber($request->tracking_num, $customerStandaloneDevice));
+        	return $data;
+		}else{
+            $customerStandaloneSim = CustomerStandaloneSim::whereId($data['customer_standalone_sim_id'])->with('sim', 'customer')->first();
+			$customerStandaloneSim->update([
+                'status'        => 'complete',
+                'tracking_num'  => $request->tracking_num,
+                'sim_num'       => $request->sim_num,
+                'shipping_date' => Carbon::today()
+            ]);
 
-			$shippingDate = $request->has( 'shipping_date' ) ? Carbon::createFromFormat('Y-m-d', $request->shipping_date) : Carbon::today();
-
-			if ( array_key_exists( "subscription_id", $data ) ) {
-				$subscription = Subscription::whereId( $data[ 'subscription_id' ] )->with( 'device', 'sim', 'customer' )->first();
-
-				$subscription->update( [
-					'status'        => 'for-activation',
-					'tracking_num'  => $request->tracking_num,
-					'sim_card_num'  => $request->sim_num,
-					'device_imei'   => $imeiValue,
-					'shipping_date' => $shippingDate
-				] );
-				event( new SubcriptionStatusChanged( $data[ 'subscription_id' ] ) );
-				event( new ShippingNumber( $request->tracking_num, $subscription ) );
-
-				return $data;
-			} else if ( array_key_exists( "customer_standalone_device_id", $data ) ) {
-				$customerStandaloneDevice = CustomerStandaloneDevice::whereId( $data[ 'customer_standalone_device_id' ] )->with( 'device', 'customer' )->first();
-				if ( $customerStandaloneDevice->subscription_id ) {
-					$subscription = Subscription::whereId( $customerStandaloneDevice->subscription_id )->first();
-					if ( $subscription ) {
-						$deviceImei = $subscription->device_imei;
-						$subscription->update( [
-							'device_imei'  => $imeiValue
-						] );
-
-						SubscriptionLog::create( [
-							'subscription_id'   => $subscription->id,
-							'company_id'        => auth()->user()->company_id,
-							'customer_id'       => $customerStandaloneDevice->customer->id,
-							'description'       => 'Replacement Device shipped',
-							'category'          => SubscriptionLog::CATEGORY['device-imei-changed'],
-							'old_product'       => $deviceImei,
-							'new_product'       => $imeiValue
-						]);
-					}
-				}
-				$customerStandaloneDevice->update( [
-					'status'        => 'complete',
-					'tracking_num'  => $request->tracking_num,
-					'imei'          => $request->imei,
-					'shipping_date' => $shippingDate
-				] );
-				event( new ShippingNumber( $request->tracking_num, $customerStandaloneDevice ) );
-
-				return $data;
-			} else {
-				$customerStandaloneSim = CustomerStandaloneSim::whereId( $data[ 'customer_standalone_sim_id' ] )->with( 'sim', 'customer' )->first();
-				if ( $customerStandaloneSim->subscription_id ) {
-					$subscription = Subscription::whereId( $customerStandaloneSim->subscription_id )->first();
-					if ( $subscription ) {
-						$simCardNum = $subscription->sim_card_num;
-						$subscription->update( [
-							'sim_card_num' => $request->sim_num
-						] );
-
-						SubscriptionLog::create( [
-							'subscription_id'   => $subscription->id,
-							'company_id'        => auth()->user()->company_id,
-							'customer_id'       => $customerStandaloneSim->customer->id,
-							'description'       => 'Replacement SIM shipped',
-							'category'          => SubscriptionLog::CATEGORY['sim-num-changed'],
-							'old_product'       => $simCardNum,
-							'new_product'       => $request->sim_num
-						]);
-					}
-				}
-				$customerStandaloneSim->update( [
-					'status'        => 'complete',
-					'tracking_num'  => $request->tracking_num,
-					'sim_num'       => $request->sim_num,
-					'shipping_date' => $shippingDate
-				] );
-
-				event( new ShippingNumber( $request->tracking_num, $customerStandaloneSim ) );
-
-				return $data;
-			}
-		} catch (\Exception $e ) {
-			Log::info($e->getMessage() . ' on line number: '.$e->getLine() . ' Mark Ship');
-			return response()->json( [
-				'status'    => 'error',
-				'message'   => $e->getMessage()
-			], 500);
+            event(new ShippingNumber($request->tracking_num, $customerStandaloneSim));
+        	return $data;
 		}
     }
 
@@ -266,8 +214,7 @@ class ShippingController extends Controller
             return $this->shippingName($detail);
         })  
         ->addColumn('order-number', function($detail) {
-            return $detail->order['order_num'];
-
+           return null;
         })  
         ->addColumn('porting-no', function($detail) {
             if($detail->plan_id){
@@ -283,7 +230,7 @@ class ShippingController extends Controller
             return $this->getProduct($detail);
         })
         ->addColumn('shipping-address', function($detail) {
-            return $detail->order['full_address'];
+         return null;
         })
         ->addColumn('processed', function($detail) {
             if($detail->processed == true){
@@ -315,7 +262,8 @@ class ShippingController extends Controller
 				    '</div></div>';
         })
         ->addColumn('all-data', function($data) {
-            return htmlspecialchars(json_encode($data));
+            // dd($data);
+            return json_encode($data);
         })
 		->addColumn('id', function($detail) {
 			return $detail->id;
