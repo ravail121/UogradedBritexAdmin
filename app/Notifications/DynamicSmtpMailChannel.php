@@ -52,7 +52,7 @@ class DynamicSmtpMailChannel extends MailChannel
                 'encryption' => $company->smtp_encryption,
             ];
 
-            $previousSwiftMailer = $this->mailer->getSwiftMailer();
+            // $previousSwiftMailer = $this->mailer->getSwiftMailer();
 
             $swiftTransport = new Swift_SmtpTransport(
                 $customSmtp['host'],
@@ -63,15 +63,15 @@ class DynamicSmtpMailChannel extends MailChannel
             $swiftTransport->setUsername($customSmtp['username']);
             $swiftTransport->setPassword($customSmtp['password']);
 
-            $this->mailer->setSwiftMailer(new Swift_Mailer($swiftTransport));
+            
         }
 
         $result = parent::send($notifiable, $notification);
 
-        if (isset($previousSwiftMailer)) {
-            //restore the previous mailer
-            $this->mailer->setSwiftMailer($previousSwiftMailer);
-        }
+        // if (isset($previousSwiftMailer)) {
+        //     //restore the previous mailer
+        //     $this->mailer->setSwiftMailer($previousSwiftMailer);
+        // }
 
         return $result;
     }

@@ -24,6 +24,7 @@
         "laravelcollective/html": "^6.3",
         "nesbot/carbon": "^2.57",
         "rap2hpoutre/laravel-log-viewer": "^2.2",
+        "swiftmailer/swiftmailer": "^6.3",
         "yajra/laravel-datatables-oracle": "^10.1"
     },
     "require-dev": {

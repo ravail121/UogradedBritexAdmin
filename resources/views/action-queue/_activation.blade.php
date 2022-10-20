@@ -33,16 +33,16 @@
                 <table class="table audittable tablecentertxt" id="activation-table">
                     <thead>
                         <tr>
-                            <th scope="col" class=""></th>
-                            <th scope="col" class="custom-name">Name</th>
-                            <th scope="col" class="sorting-width">Order Number</th>
-                            <th scope="col" class="extra-sorting-width">Porting No. /DAC (?)</th>
-                            <th scope="col" class="sorting-width">IMEI</th>
-                            <th scope="col" class="sorting-width">Sim Number</th>
-                            <th scope="col" class="extra-sorting-width">Tracking Number</th>
-                            <th scope="col" class="">Plan Type</th>
-                            <th scope="col" class="no-sort-option">Add-Ons</th>
-                            <th scope="col" class="">Action</th>
+                            <th scope="col" class = ""></th>
+                            <th scope="col" class = "custom-name">Name</th>
+                            <th scope="col" class = "sorting-width">Order Number</th>
+                            <th scope="col" class = "extra-sorting-width">Porting No. /DAC (?)</th>
+                            <th scope="col" class = "sorting-width">IMEI</th>
+                            <th scope="col" class = "sorting-width">Sim Number</th>
+                            <th scope="col" class = "extra-sorting-width">Tracking Number</th>
+                            <th scope="col" class = "">Plan Type</th>
+                            <th scope="col" class = "no-sort-option">Add-Ons</th>
+                            <th scope="col" class = "">Action</th>
                             <th class="display-none"></th>
                             <th class="display-none"></th>
                         </tr>
@@ -127,7 +127,7 @@
                             <label>Phone No.</label>
                         </div>
                         <div class="form-group col-sm-12 col-md-6 activation-phoneno">
-                            <input type="text" id ="phone_number" name= "phone_number" class="form-control effect-1" placeholder="" value="">
+                            <input type="text" id ="phone_number" name= "phone_number" class="form-control effect-1" placeholder="" value = "">
                             <span class="focus-border"></span>
                         </div>
                         <div class="form-group col-sm-12 col-md-6">
@@ -148,8 +148,8 @@
                         </div>
 
                         <div class="form-group col-sm-12 col-md-12 text-center mt-3">
-                            <button type="submit" class="final-activation-btn check-phone-no btn lightbtn2"><span class="fas fa-power-off"></span>Activate</button>
-                            <p class="mt-3"><span class="txtred">*</span>Activating this record will change the status from "Activation" to "Completed".</p>
+                            <button type="submit" class="final-activation-btn check-phone-no btn lightbtn2"><span class="fas fa-power-off"></span>Activate </button>
+                            <p class="mt-3"><span class="txtred">*</span>Activating this record will change the status from “Activation” to “Completed”.</p>
                         </div>
                     </div>
                 </form>
@@ -194,40 +194,6 @@
         </div>
     </div>
 </div>
-
-<!-- Marked as Completed Popup Model modalsss -->
-<div class="modal fade bd-example-modal-xl" id="removeRequestedZip" tabindex="-1" role="dialog" aria-labelledby="removeRequestedZip" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content editpopcontent">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">&times;</span> </button>
-            <div class="row">
-                <div class="col-sm-12 col-md-12">
-                    <div class="topbx topbx-2">
-                        <h1>Remove the requested ZIP?</h1>
-                    </div>
-                </div>
-            </div>
-            <div class="popvtmcont">
-                <form id="remove-requested-zip-form">
-                    <input type="hidden" name="subscription_id" class="remove-requested-zip-subscription-id">
-                    <div class="form-group">
-                        <div class="row">
-                            <div class="col-sm-6 col-md-4">
-                                <input type="checkbox" class="send-email-for-removed-zip-checkbox" name="send_email" id="send-email-for-removed-zip-checkbox" value="1" checked>
-                            </div>
-                            <div class="col-sm-6 col-md-8 checkbox-label">
-                                <label for="send-email-for-removed-zip-checkbox">Send Email to the Customer<span class="text-danger"> *</span></label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group col-sm-12 col-md-12 text-center mt-10">
-                        <button type="submit" class="btn lightbtn2 remove-requested-zip-btn" aria-label="Confirm"><span class="fas fa-check"></span>Confirm</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 @push('js')
 <script>
     $(function(){
@@ -251,7 +217,7 @@
                 "info": true,
                 "bDestroy": true,
                 "ajax": {
-                    "url": "{{ URL::route('actionQueue.activation.datatables') }}",
+                    "url": "{{URL::route('actionQueue.activation.datatables') }}",
                     "data": function ( d ) {
                         d.date = date;
                     },
@@ -311,7 +277,7 @@
             $('.selected-tr').removeClass('selected-tr');
             $this.addClass('selected-tr');
             let dataText = $this.find('.data-row').text();
-            data = JSON.parse(dataText);
+            data = JSON.parse(dataText.replace(/&quot;/g,'"'));
             $('.activation-orderno p').text(data.order.order_num);
             $('.activation-date p').text(data.order.date_processed_formatted);
             $('.activation-plan p').html($this.find('.plan-type').html());
@@ -352,31 +318,24 @@
         $('body').on('submit', '#activation-form', function(e) {
             e.preventDefault();
             var data = $('.all-data-model').val();
-            data = JSON.parse(data);
+            data = JSON.parse(data.replace(/&quot;/g,'"'));
             validateActivationForm(data);
 
             if ($("#activation-form").valid()) {
-                if ($('#ban-account').val()) {
+                if($('#ban-account').val()){
                     $('.invalid-ban').addClass('display-none');
-                    if (data.plans.carrier_id != 0 && data.plans.carrier.slug == "at&t") {
-                        if ($('#selectbangroup').val()) {
+                    if(data.plans.carrier_id != 0 && data.plans.carrier.slug =="at&t"){
+                        if($('#selectbangroup').val()){
                             $('.invalid-ban-group').addClass('display-none');
                             AjaxActivation(data);
-                        } else {
+                        }else{
                             $('.invalid-ban-group').removeClass('display-none');
                         }
-                    } else {
-                        AjaxActivation(data);
+                    }else{
+                        AjaxActivation(data); 
                     }
-                } else {
-                    if(data.plans.carrier_id === 13) {
-                        $('.invalid-ban').addClass('display-none');
-                        $('.invalid-ban-group').addClass('display-none');
-                        AjaxActivation(data);
-                    } else {
-                        $('.invalid-ban').removeClass('display-none');
-                    }
-
+                }else{
+                    $('.invalid-ban').removeClass('display-none');
                 }
             }
         });
@@ -386,8 +345,7 @@
                 id: data.id,
                 phone_number: $('.activation-phoneno input').val(),
                 ban_id: $('#ban-account').val(),
-                ban_group_id: $('#selectbangroup').val(),
-                carrier_id: data.plans.carrier_id
+                ban_group_id: $('#selectbangroup').val()
             };
             $.ajax({
                 type: 'POST',
@@ -413,9 +371,7 @@
             ignore: 'input[type=hidden], #ban-account-selectized',
             rules: {
                 phone_number: {
-                    required: function(element) {
-                        return argument.plans.carrier_id !== 13
-                    },
+                    required:  true,
                     minlength: 12,
                     remote: {
                         url: "{{ route('subscription.check-phone-uniqueness') }}",
@@ -578,46 +534,5 @@
         });
     }
 
-    $('body').on('click', '.remove-requested-zip-button', function(e) {
-        e.preventDefault();
-        var subscriptionId = $(this).attr('data-subscription-id');
-        $('#removeRequestedZip .remove-requested-zip-subscription-id').val(subscriptionId);
-    });
-
-    $('body').on('submit', '#remove-requested-zip-form', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        removeRequestedZipForm(form);
-    });
-
-    function removeRequestedZipForm(form){
-        var formData = new FormData(form[0]);
-        $.ajax({
-            type: 'POST',
-            url: "{{ route('subscription.remove-requested-zip') }}",
-            dataType: 'json',
-            data: formData,
-            processData: false,
-            contentType: false,
-            beforeSend: showLoader,
-            success: function (data) {
-                if(data.hasOwnProperty('status') && data.status === 'success' && data.hasOwnProperty('message')){
-                    form[0].reset();
-                    form.find('.invalid-feedback').remove();
-                    form.find('.is-invalid').removeClass('is-invalid');
-                    swal("Success!", data.message, "success");
-                }
-                if(data.hasOwnProperty('status') && data.status === 'error' && data.hasOwnProperty('message')){
-                    form[0].reset();
-                    swal("Error!", data.message, "error");
-                }
-                $('#removeRequestedZip').modal('hide');
-            },
-            complete: hideLoader,
-            error: function (xhr, status, error) {
-                firstXhrError(xhr);
-            }
-        });
-    }
 </script>
 @endpush

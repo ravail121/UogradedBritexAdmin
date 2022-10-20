@@ -58,7 +58,7 @@
             </div>
             <div class="popvtmcont">
                 <form id ="shipping-form">
-                    <input type="hidden" class="all-shipping-data" value="">
+                    <input type="hidden" class="all-shipping-data" value = "">
                     <div class="row">
                         <div class="form-group col-sm-12 col-md-6">
                             <label>Order No.</label>
@@ -113,13 +113,6 @@
                             <input type="text" class="form-control effect-1" id ="imei" name="imei" maxlength="15" placeholder="" value = "">
                             <span class="focus-border"></span>
                         </div>
-                        <div class="form-group col-sm-12 col-md-6">
-                            <label for="shipping_date">Shipping Date</label>
-                        </div>
-                        <div class="form-group col-sm-12 col-md-6 shipping_date">
-                            <input type="date" class="form-control effect-1" id ="shipping_date" name="shipping_date">
-                            <span class="focus-border"></span>
-                        </div>
                         {{-- <div class="form-group col-sm-12 col-md-6 shipping-sim-no">
                         <p></p>
                         </div> --}}
@@ -137,7 +130,7 @@
 </div>
 
 @push('js')
-    {!! Html::script('//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js') !!}
+    {!! Html::script('https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js') !!}
     <script>
         $(function(){
             $(".shipping-tab-btn").on("click", loadSubcriptionData(0));
@@ -145,10 +138,6 @@
             $('.shipping-date-btn').on('click', function(e){
                 e.preventDefault();
                 loadSubcriptionData($(this).val());
-            });
-
-            $('#shipping_date').prop('max', function(){
-                return new Date().toJSON().split('T')[0];
             });
 
             function loadSubcriptionData(date = 0) {
@@ -222,7 +211,9 @@
                 $('.selected-tr').removeClass('selected-tr');
                 $this.addClass('selected-tr');
                 let dataText = $this.find('.data-row').text();
+               // console.log(dataText);
                 data = JSON.parse(dataText);
+                console.log(data);
                 $('.form-group p').text();
                 $('em').hide();
                 $('.shipping-order-id p').text(data.order.order_num);
@@ -270,6 +261,7 @@
             $('.mark-final-shipped-btn').on('click', function(e){
                 e.preventDefault();
                 data = $('.all-shipping-data').val();
+                console.log(data);
                 data = JSON.parse(data);
                 validateData();
                 if ($('#shipping-form').valid()) {
@@ -278,13 +270,13 @@
             });
 
             function AjaxMarkShipped(data) {
-                var formData = {};
+                let formData = null;
                 if(data.plan_id){
                     formData = {
                         subscription_id: data.id,
                         tracking_num: $('#tracking_num').val(),
                         imei: $('#imei').val(),
-                        sim_num: $('#sim_num').val(),
+                        sim_card_num: $('#sim_num').val(),
                     };
                 }else if(data.device_id){
                     formData = {
@@ -298,9 +290,6 @@
                         tracking_num: $('#tracking_num').val(),
                         sim_num: $('#sim_num').val(),
                     };
-                }
-                if($('#shipping_date').val() !== ''){
-                    formData.shipping_date = $('#shipping_date').val();
                 }
                 $.ajax({
                     type: 'POST',
