@@ -36,6 +36,7 @@ class SubscriptionController extends Controller
 	 */
 	public function getSubscriptionData($customer_id, Request $request)
     {
+        //dd(auth()->user()->company_id);
         $data = Subscription
                 ::with(
                     'customer','ban','banGroup','plans.sims','subscriptionAddon.addons','port','order',
@@ -44,22 +45,15 @@ class SubscriptionController extends Controller
                 ->whereHas('customer', function ($query) {
                     $query->where('company_id', '=', auth()->user()->company_id );
                 })->orderBy('created_at', 'desc')->get();
-		$replacementSim = ReplacementProduct::where([
-			['company_id', auth()->user()->company_id],
-			['product_type', 'sim']
-		])->first();
-	    $replacementDevice = ReplacementProduct::where([
-		    ['company_id', auth()->user()->company_id],
-		    ['product_type', 'device']
-	    ])->first();
-                    
+            
+                 
         return DataTables::of($data)
             ->addColumn('phone-no', function(Subscription $detail) {
                 return '<span class="timg">
                         <img src='.asset($this->carrierImage($detail->plans["carrier_id"])).' alt="" width="25" height="25"></span>'.$detail->phone_number_formatted;
             })
             ->addColumn('ban', function(Subscription $detail) {
-                    return $detail->ban['number'];
+                return $detail->ban['number'];
             })
             ->addColumn('ban-group-number', function(Subscription $detail) {
                     return isset($detail->banGroup)?$detail->banGroup['number'] : '' ;
@@ -110,19 +104,16 @@ class SubscriptionController extends Controller
             ->addColumn('status', function(Subscription $detail) {
                 return $this->getSubscriptionStatus($detail);
             })
-            ->addColumn('action', function(Subscription $detail) use ($replacementDevice, $replacementSim) {
+            ->addColumn('action', function(Subscription $detail) {
             return '<div class="actions actionbtn">
-                        <button type="button" class="btn btn-dark morebtn edit-subscription-button" id="sub-detail-button" data-subscription_id="'.$detail->id.'" data-customer_id="'.$detail->customer_id.'">More</button>
-                        <a href="javascript:void(0);" class="editbtn active edit-subscription-button"><span class="fas fa-pencil-alt"></span></a>
+                        <button type="button" class="btn btn-dark morebtn" id="sub-detail-button" data-subscription_id="'.$detail->id.'" data-customer_id="'.$detail->customer_id.'">More</button>
+                        <a href="#" class="editbtn active"><span class="fas fa-pencil-alt"></span></a>
                         ' . ($detail->status !== 'closed' ? '
                         <div class="dropdown active-action-btn">
-                            <a class="btn billind-cycles markbtn dropdown-toggle" href="javascript:void(0);" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-date='.$detail->customer["billing_end"].'> Actions </a>
+                            <a class="btn billind-cycles markbtn dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-date = '.$detail->customer["billing_end"].'> Actions </a>
 					        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink"> 
-						        <a class="dropdown-item active-dropdown-option display-none" href="javascript:void(0);">Suspend</a>
-						        <a class="dropdown-item active-dropdown-option close-subscription" href="javascript:void(0);">Close</a>'. ($replacementSim ? '
-						        <a class="dropdown-item active-dropdown-option subscription-replace-sim-card" href="javascript:void(0);" data-sim-id="'.$replacementSim->product_id .'" data-subscription-id="'.$detail->id.'">Replace SIM Card</a>' : '') . ($replacementDevice ? '
-						        <a class="dropdown-item active-dropdown-option subscription-replace-device" href="javascript:void(0);" data-device-id="'.$replacementDevice->product_id .'" data-subscription-id="'.$detail->id.'">Replace Device</a>' : '') . ($replacementDevice && $replacementSim ? '
-						        <a class="dropdown-item active-dropdown-option subscription-replace-sim-device" href="javascript:void(0);" data-sim-id="'.$replacementSim->product_id .'" data-device-id="'.$replacementDevice->product_id .'" data-subscription-id="'.$detail->id.'">Replace SIM + Device</a>' : '') . '
+						        <a class="dropdown-item active-dropdown-option display-none" href="#">Suspend</a>
+						        <a class="dropdown-item active-dropdown-option" href="#">Close</a>
 				            </div>
 				        </div>
 					    <div class="action-confirm-btn display-none">
