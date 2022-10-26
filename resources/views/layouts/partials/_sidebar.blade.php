@@ -152,11 +152,11 @@
                 </li>
             @endif
 
-            @if (env('CRON_TESTING'))
+           
                 <li class="{{ setActive('cron-tester', 'active') }}">
                     <a href={{ route('cron.index') }}> <i class="fas fa-tasks"></i> <span>Cron Tester</span> </a>
                 </li>
-            @endif
+           
             <li class="{{ setActive('email-template', 'active') }}">
                 <a href="#tools" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"> <i class="fas fa-tools"></i> <span>Tools</span> </a>
                 <ul class="collapse list-unstyled" id="tools">
